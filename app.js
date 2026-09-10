@@ -19,12 +19,11 @@ const User = require("./models/user.js");
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
-const { error } = require('console');
 
-const dburl = process.env.ATLAS_DB_URL
+const dburl = "mongodb://127.0.0.1:27017/wanderlust";
 
 main()
-.then(() => {
+  .then(() => {
     console.log("Connected to DB");
   })
   .catch((err) => {
@@ -51,8 +50,8 @@ const store = MongoStore.create({
   touchAfter: 24 * 3600,
 });
 
-store.on("error" , () => {
-  console.log("Error occured in MONGO STORE",error);
+store.on("error", (err) => {
+  console.log("Error occurred in MONGO STORE", err);
 });
 
 const sessionOptions = {
@@ -82,32 +81,19 @@ app.use((req,res,next) => {
   res.locals.error = req.flash("error");
   res.locals.currUser = req.user;
   next();
-})
-
-// app.get("/demouser", async (req,res) => {
-//   let fakeUser = new User({
-//     email: "student@gmail.com",
-//     username: "delta-student",
-//   });
-
-//   let registeredUser = await User.register(fakeUser,"helloworld");
-//   res.send(registeredUser);
-// })
+});
 
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
-app.use("/",userRouter);
+app.use("/", userRouter);
 
-//if route not matches
-app.all("*" , (req,res,next) => {
-    next(new ExpressError(404, "page not found"));
+app.all("*", (req,res,next) => {
+  next(new ExpressError(404, "page not found"));
 });
 
-// MIDDLEWARE
 app.use((err,req,res,next) => {
-    let{statusCode = 500,message = "Something went wrong"} = err;
-    res.status(statusCode).render("error.ejs" , {message});
-    //res.status(statusCode).send(message);
+  let { statusCode = 500, message = "Something went wrong" } = err;
+  res.status(statusCode).render("error.ejs", { message });
 });
 
 app.listen(8080, () => {
